@@ -50,7 +50,7 @@ functional vs mocked.
 
 ## Current status  (last updated: 2026-07-19)
 
-**Phase:** Monorepo skeleton scaffolded and verified runnable; feature modules next.
+**Phase:** Backend core (Tasks 1–5) built and audit-hardened (4-cycle Opus audit → ship-ready). Next: Task 6.
 
 **Done**
 - [x] Assignment scoped; HighLevel API discovery complete (`docs/GHL_API_NOTES.md`).
@@ -68,6 +68,9 @@ functional vs mocked.
 - [x] Ingestion adapter (Task 5): `normalize.js`, `FixtureSource`, `GhlPullSource`,
   `ingestService` (fetch → dedupe → ensure-agent → store; analyzer injected in Task 7). Two
   fixture calls seeded. Verified: fixtures load + dedupe; normalizers handle array + string.
+- [x] Audit loop (Opus, 4 cycles): 16 findings fixed across 3 commits (null-safety, hot-path
+  indexes + UNIQUE invariant, batch resilience, config/CORS edge cases); 1 false positive
+  declined, 1 reasoned scope decision. Final cycle returned SHIP-READY.
 
 **Build roadmap**
 - [x] 2. Scaffold monorepo skeleton — runnable; feature files are stubs stating their contract.
