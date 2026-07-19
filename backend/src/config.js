@@ -7,7 +7,7 @@ import 'dotenv/config'
 // Parse a numeric env var, falling back when unset/empty/non-numeric. Note Number('') === 0,
 // so an empty-but-set PORT must be caught explicitly or it would bind a random port.
 const num = (value, fallback) => {
-  if (value == null || value === '') return fallback
+  if (value == null || String(value).trim() === '') return fallback
   const n = Number(value)
   return Number.isFinite(n) ? n : fallback
 }

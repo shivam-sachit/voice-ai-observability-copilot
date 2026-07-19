@@ -19,7 +19,7 @@ function ensureAgent(agentId) {
  * @param {import('./TranscriptSource.js').TranscriptSource} source
  * @param {{ analyze?: (transcript: object) => Promise<void> }} [opts]
  *        `analyze` is injected in Task 7 so ingestion has no hard dependency on the analyzer.
- * @returns {Promise<{ fetched: number, ingested: number, skipped: number, analyzed: number }>}
+ * @returns {Promise<{ fetched:number, ingested:number, skipped:number, analyzed:number, analyzeFailed:number }>}
  */
 export async function ingestFromSource(source, { analyze } = {}) {
   const transcripts = await source.fetchRecent()
@@ -60,13 +60,15 @@ export async function ingestOne(transcript, { analyze } = {}) {
   ensureAgent(transcript.agentId)
   insertTranscript(transcript)
   let analyzed = 0
+  let analyzeFailed = 0
   if (analyze) {
     try {
       await analyze(transcript)
       analyzed = 1
     } catch (err) {
+      analyzeFailed = 1
       console.warn(`analysis failed for ${transcript.id}: ${err.message}`)
     }
   }
-  return { ingested: 1, analyzed, duplicate: false }
+  return { ingested: 1, analyzed, analyzeFailed, duplicate: false }
 }

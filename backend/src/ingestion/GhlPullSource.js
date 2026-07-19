@@ -20,18 +20,19 @@ export class GhlPullSource extends TranscriptSource {
     const items = extractItems(list)
     // Single page for now — log the count so truncation is never silent (see GHL_API_NOTES).
     console.log(`GhlPullSource: received ${items.length} call log(s) (single page; pagination TODO)`)
-    // Transcripts live on the call-log detail endpoint; fetch each, falling back to the list
-    // item if the detail call fails, so one bad record doesn't drop the whole batch.
+    // Transcripts live on the call-log detail endpoint. On a detail failure we return null
+    // (dropped below), NOT the list item: the list item has no transcript, and storing a
+    // turn-less shell would let dedupe lock it in and skip the retry on the next sync.
     const details = await Promise.all(
       items.map(async (it) => {
         try {
           return await ghl.getCallLog(callId(it))
         } catch {
-          return it
+          return null
         }
       }),
     )
-    // Drop null detail bodies and any record we couldn't derive an id for.
+    // Drop null bodies (missing/failed detail) and any record we couldn't derive an id for.
     return details.filter(Boolean).map(normalizeGhlCallLog).filter((t) => t.id)
   }
 }

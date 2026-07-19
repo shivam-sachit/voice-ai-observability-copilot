@@ -42,6 +42,7 @@ function normalizeTurns(input) {
           ? { speaker: mapSpeaker(m[1]), text: m[2] }
           : { speaker: 'caller', text: line }
       })
+      .filter((t) => t.text !== '')
   }
   return []
 }
