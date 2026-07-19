@@ -1,15 +1,26 @@
 import { Router } from 'express'
+import { ah } from './asyncHandler.js'
+import { listAgents, getAgentById, listKpisForAgent } from '../db/repositories.js'
+import { getAgentHealth } from '../services/fleet.js'
+import { syncAgents } from '../services/agentSync.js'
 
-// Agent endpoints. Handlers are stubbed (501) until Task 8 wires them to the services.
 const router = Router()
 
-// GET /api/agents — list agents with rolled-up health
-router.get('/', (req, res) => res.status(501).json({ error: 'not implemented', task: 8 }))
+// GET /api/agents — every agent with its health rollup
+router.get('/', ah((req, res) => {
+  res.json(listAgents().map((a) => ({ ...a, health: getAgentHealth(a.id) })))
+}))
 
-// POST /api/agents/sync — pull agents from GHL (or load fixtures) into the DB
-router.post('/sync', (req, res) => res.status(501).json({ error: 'not implemented', task: 8 }))
+// POST /api/agents/sync — pull agents from GHL, or load fixtures
+router.post('/sync', ah(async (req, res) => {
+  res.json(await syncAgents())
+}))
 
-// GET /api/agents/:id — agent detail + KPIs + aggregate health
-router.get('/:id', (req, res) => res.status(501).json({ error: 'not implemented', task: 8 }))
+// GET /api/agents/:id — agent detail + its KPIs + health
+router.get('/:id', ah((req, res) => {
+  const agent = getAgentById(req.params.id)
+  if (!agent) return res.status(404).json({ error: 'agent not found' })
+  res.json({ ...agent, kpis: listKpisForAgent(agent.id), health: getAgentHealth(agent.id) })
+}))
 
 export default router

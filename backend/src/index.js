@@ -4,6 +4,7 @@
 import express from 'express'
 import cors from 'cors'
 import { config } from './config.js'
+import { initDb } from './db/init.js'
 
 import agentsRouter from './routes/agents.js'
 import kpisRouter from './routes/kpis.js'
@@ -11,6 +12,8 @@ import callsRouter from './routes/calls.js'
 import fleetRouter from './routes/fleet.js'
 import ingestRouter from './routes/ingest.js'
 import webhooksRouter from './routes/webhooks.js'
+
+initDb() // ensure the schema exists (idempotent) so the server is self-sufficient on boot
 
 const app = express()
 app.use(cors({ origin: config.corsOrigin }))
@@ -29,6 +32,13 @@ app.use('/api/calls', callsRouter)
 app.use('/api/fleet', fleetRouter)
 app.use('/api/ingest', ingestRouter)
 app.use('/api/webhooks', webhooksRouter)
+
+// Centralized error handler — every async route forwards rejections here via asyncHandler.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(`${req.method} ${req.originalUrl} failed:`, err.message)
+  res.status(err.status ?? 500).json({ error: err.message })
+})
 
 app.listen(config.port, () => {
   console.log(`backend listening on http://localhost:${config.port}`)

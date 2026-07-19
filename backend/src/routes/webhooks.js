@@ -1,10 +1,19 @@
 import { Router } from 'express'
+import { ah } from './asyncHandler.js'
+import { normalizeWebhook } from '../ingestion/normalize.js'
+import { ingestOne } from '../ingestion/ingestService.js'
+import { isConfigured as anthropicConfigured } from '../analysis/anthropic.js'
+import { analyzeAndStore } from '../analysis/analyzeService.js'
 
-// Inbound webhook endpoints from HighLevel. Stubbed (501) until Task 8.
 const router = Router()
 
-// POST /api/webhooks/transcript — receive the GHL "Transcript Generated" payload,
-// then ingest + analyze it. This is the real-time observability path.
-router.post('/transcript', (req, res) => res.status(501).json({ error: 'not implemented', task: 8 }))
+// POST /api/webhooks/transcript — GHL "Transcript Generated" payload -> normalize -> ingest +
+// analyze. This is the real-time observability path.
+router.post('/transcript', ah(async (req, res) => {
+  const transcript = normalizeWebhook(req.body ?? {})
+  if (!transcript.id) return res.status(400).json({ error: 'payload missing a call id' })
+  const analyze = anthropicConfigured() ? analyzeAndStore : undefined
+  res.json(await ingestOne(transcript, { analyze }))
+}))
 
 export default router

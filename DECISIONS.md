@@ -435,6 +435,36 @@ graded quality, and one env var flips it.
 
 ---
 
+## ADR-025 — REST API layer: thin async handlers, boot-time schema init, config-driven degradation
+
+**Context.** The HTTP layer sits over the services (agents, kpis, calls, fleet, ingest,
+webhooks).
+
+**Decision.**
+- Route handlers are thin and wrapped in `asyncHandler` (`ah`) so async rejections reach one
+  centralized Express error handler (Express 5 auto-forwards sync throws, but not async
+  rejections).
+- The server **initializes the schema on boot** (`initDb()`), so it's self-sufficient — no
+  separate `db:init` needed just to run it (the script stays for explicit setup).
+- **Graceful degradation by config:** `/ingest/sync` uses `GhlPullSource` when a PIT is set,
+  else `FixtureSource`; analysis runs only when `ANTHROPIC_API_KEY` is present
+  (`analyzeAndStore` injected conditionally). The demo works with zero credentials; the real
+  paths light up when creds are present.
+- Ingestion counters now distinguish **analyzed** vs **analyzeSkipped** (agent has no active
+  KPIs) vs **analyzeFailed** — the injected callback's truthy return signals a real analysis
+  (refines ADR-022).
+- Aggregation SQL lives in `db/aggregations.js` (still the DB layer per ADR-020);
+  `services/fleet.js` shapes it. Uses SQLite `json_array_length` to count use-actions.
+
+**Alternatives rejected.**
+- *try/catch in every handler* — noisy; `asyncHandler` + one error middleware is cleaner.
+- *Require `db:init` before boot* — brittle; boot-time init is idempotent.
+
+**Trade-off accepted.** The calls list does one analysis lookup per call (N+1) — fine at demo
+scale; flagged in-code to switch to a join if call volume grows.
+
+---
+
 ## ADR-021 — The GHL client is a thin transport; response mapping lives in ingestion
 
 **Context.** HighLevel's exact response shapes and some query-param/pagination details are not

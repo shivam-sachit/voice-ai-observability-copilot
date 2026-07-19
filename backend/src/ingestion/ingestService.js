@@ -17,15 +17,18 @@ function ensureAgent(agentId) {
 /**
  * Ingest every transcript a source yields.
  * @param {import('./TranscriptSource.js').TranscriptSource} source
- * @param {{ analyze?: (transcript: object) => Promise<void> }} [opts]
- *        `analyze` is injected in Task 7 so ingestion has no hard dependency on the analyzer.
- * @returns {Promise<{ fetched:number, ingested:number, skipped:number, analyzed:number, analyzeFailed:number }>}
+ * @param {{ analyze?: (transcript: object) => Promise<object|null> }} [opts]
+ *        `analyze` is injected (Task 7) so ingestion has no hard dependency on the analyzer.
+ *        It should return a truthy result when it analyzed, or a falsy value when it chose to
+ *        skip (e.g. the agent has no active KPIs yet).
+ * @returns {Promise<{ fetched:number, ingested:number, skipped:number, analyzed:number, analyzeSkipped:number, analyzeFailed:number }>}
  */
 export async function ingestFromSource(source, { analyze } = {}) {
   const transcripts = await source.fetchRecent()
   let ingested = 0
   let skipped = 0
   let analyzed = 0
+  let analyzeSkipped = 0
   let analyzeFailed = 0
 
   for (const t of transcripts) {
@@ -40,8 +43,9 @@ export async function ingestFromSource(source, { analyze } = {}) {
     // POST /calls/:id/analyze), so one analyzer error never drops the rest of the batch.
     if (analyze) {
       try {
-        await analyze(t)
-        analyzed++
+        const result = await analyze(t)
+        if (result) analyzed++
+        else analyzeSkipped++
       } catch (err) {
         analyzeFailed++
         console.warn(`analysis failed for ${t.id}: ${err.message}`)
@@ -49,7 +53,7 @@ export async function ingestFromSource(source, { analyze } = {}) {
     }
   }
 
-  return { fetched: transcripts.length, ingested, skipped, analyzed, analyzeFailed }
+  return { fetched: transcripts.length, ingested, skipped, analyzed, analyzeSkipped, analyzeFailed }
 }
 
 /**
@@ -66,8 +70,7 @@ export async function ingestOne(transcript, { analyze } = {}) {
   let analyzeFailed = 0
   if (analyze) {
     try {
-      await analyze(transcript)
-      analyzed = 1
+      if (await analyze(transcript)) analyzed = 1
     } catch (err) {
       analyzeFailed = 1
       console.warn(`analysis failed for ${transcript.id}: ${err.message}`)
