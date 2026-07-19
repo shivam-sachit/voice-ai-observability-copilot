@@ -1,0 +1,20 @@
+{
+  "id": "call_booking_003",
+  "agentId": "agent_booking_bot",
+  "contactId": "contact_carol",
+  "direction": "inbound",
+  "status": "completed",
+  "durationSec": 104,
+  "startedAt": "2026-07-14T16:10:00Z",
+  "turns": [
+    { "speaker": "agent", "text": "Thanks for calling Bright Smile Dental, this is Ava. How can I help?", "ts": 0 },
+    { "speaker": "caller", "text": "I'd like to come in for a checkup.", "ts": 5 },
+    { "speaker": "agent", "text": "Happy to help. May I have your full name?", "ts": 9 },
+    { "speaker": "caller", "text": "Carol Perez.", "ts": 13 },
+    { "speaker": "agent", "text": "Thanks, Carol. I can do Tuesday at 9am. Does that work?", "ts": 17 },
+    { "speaker": "caller", "text": "Tuesday at 9 is good.", "ts": 23 },
+    { "speaker": "agent", "text": "You're all set for Tuesday at 9am. Anything else?", "ts": 27 },
+    { "speaker": "caller", "text": "No, that's it, thanks.", "ts": 32 },
+    { "speaker": "agent", "text": "Great, see you Tuesday. Bye!", "ts": 35 }
+  ]
+}

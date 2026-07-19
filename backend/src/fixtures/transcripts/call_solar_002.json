@@ -1,0 +1,20 @@
+{
+  "id": "call_solar_002",
+  "agentId": "agent_solar_qualifier",
+  "contactId": "contact_erin",
+  "direction": "outbound",
+  "status": "completed",
+  "durationSec": 88,
+  "startedAt": "2026-07-15T19:40:00Z",
+  "turns": [
+    { "speaker": "agent", "text": "Hi, this is Sam from SunPeak Solar. Is now an okay time?", "ts": 0 },
+    { "speaker": "caller", "text": "I guess, I was curious about solar.", "ts": 5 },
+    { "speaker": "agent", "text": "Are you the homeowner?", "ts": 9 },
+    { "speaker": "caller", "text": "Yes.", "ts": 12 },
+    { "speaker": "agent", "text": "Great. Our panels are top quality and come with a strong warranty.", "ts": 15 },
+    { "speaker": "caller", "text": "Okay... how much would it cost for a place like mine?", "ts": 21 },
+    { "speaker": "agent", "text": "It really depends. Someone from our team can go over the details.", "ts": 27 },
+    { "speaker": "caller", "text": "Alright, I suppose.", "ts": 33 },
+    { "speaker": "agent", "text": "Thanks for your time, have a good one.", "ts": 37 }
+  ]
+}

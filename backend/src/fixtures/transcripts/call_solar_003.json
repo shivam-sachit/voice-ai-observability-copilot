@@ -1,0 +1,18 @@
+{
+  "id": "call_solar_003",
+  "agentId": "agent_solar_qualifier",
+  "contactId": "contact_frank",
+  "direction": "outbound",
+  "status": "completed",
+  "durationSec": 62,
+  "startedAt": "2026-07-16T14:18:00Z",
+  "turns": [
+    { "speaker": "agent", "text": "Hi, this is Sam with SunPeak Solar calling about solar options for your home.", "ts": 0 },
+    { "speaker": "caller", "text": "Honestly, I'm not interested. Please take me off your list.", "ts": 6 },
+    { "speaker": "agent", "text": "I hear you, but solar could save you thousands over a few years.", "ts": 11 },
+    { "speaker": "caller", "text": "No. I already said I'm not interested.", "ts": 16 },
+    { "speaker": "agent", "text": "It's just 15 minutes for a free consultation, no obligation.", "ts": 20 },
+    { "speaker": "caller", "text": "I said no. Goodbye.", "ts": 25 },
+    { "speaker": "agent", "text": "Okay, but if you change your mind—", "ts": 27 }
+  ]
+}

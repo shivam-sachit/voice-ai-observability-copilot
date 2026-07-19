@@ -74,14 +74,16 @@ functional vs mocked.
 - [x] Audit loop (Opus, 4 cycles): 16 findings fixed across 3 commits (null-safety, hot-path
   indexes + UNIQUE invariant, batch resilience, config/CORS edge cases); 1 false positive
   declined, 1 reasoned scope decision. Final cycle returned SHIP-READY.
+- [x] Fixtures + seed (Task 6): 2 agents (booking + solar qualifier), 6 transcripts with
+  varied outcomes/failure modes; `src/db/seed.js` (`npm run seed`, idempotent). Verified load.
 
 **Build roadmap**
 - [x] 2. Scaffold monorepo skeleton — runnable; feature files are stubs stating their contract.
 - [x] 3. SQLite data model + storage layer — connection, init, repositories (verified).
 - [x] 4. GHL API client with PIT auth — thin transport (verified with mocked fetch).
 - [x] 5. Ingestion adapter — normalize + FixtureSource + GhlPullSource + ingestService (verified).
-- [ ] **6. Seed realistic transcript fixtures** ← NEXT (expand set + a `seed` script)
-- [ ] 7. Claude analysis engine + KPI suggestion
+- [x] 6. Seed realistic transcript fixtures — 2 agents, 6 calls + `npm run seed` (verified).
+- [ ] **7. Claude analysis engine + KPI suggestion** ← NEXT (needs ANTHROPIC_API_KEY for live runs)
 - [ ] 8. Backend REST API endpoints
 - [ ] 9. Vue dashboard scaffold + Pinia stores + API client
 - [ ] 10. Fleet + Agent-detail + Call-transcript views
@@ -90,9 +92,9 @@ functional vs mocked.
 - [ ] **Educate-me walkthrough** (after Task 12) — teach the user the full system
   end-to-end so they can own and defend every part in the interview.
 
-**Immediate next step:** Task 6 — expand the transcript fixtures into a realistic set across a
-couple of agents, and add a `seed` script (`npm run seed`) that loads fixture agents +
-transcripts into the DB.
+**Immediate next step:** Task 7 — the Claude analysis engine: `analysis/anthropic.js`
+(structured output), `suggestKpis`, `analyzeTranscript`, wired into ingestService's `analyze`
+hook. Load the `claude-api` skill first; needs ANTHROPIC_API_KEY for live runs.
 
 **Repository:** https://github.com/shivam-sachit/voice-ai-observability-copilot — public,
 personal account (`shivam-sachit`), remote `origin`, default branch `main`.

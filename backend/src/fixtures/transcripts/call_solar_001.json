@@ -1,0 +1,22 @@
+{
+  "id": "call_solar_001",
+  "agentId": "agent_solar_qualifier",
+  "contactId": "contact_dan",
+  "direction": "outbound",
+  "status": "completed",
+  "durationSec": 176,
+  "startedAt": "2026-07-15T17:02:00Z",
+  "turns": [
+    { "speaker": "agent", "text": "Hi, this is Sam with SunPeak Solar, following up on your interest in solar. Do you have a minute?", "ts": 0 },
+    { "speaker": "caller", "text": "Sure, I filled out a form the other day.", "ts": 7 },
+    { "speaker": "agent", "text": "Great. Just to confirm, are you the homeowner at the property?", "ts": 12 },
+    { "speaker": "caller", "text": "Yes, I own the house.", "ts": 16 },
+    { "speaker": "agent", "text": "Perfect. What's got you thinking about solar, and any timeline in mind?", "ts": 20 },
+    { "speaker": "caller", "text": "My bills keep climbing. I'd want it done in the next couple of months.", "ts": 27 },
+    { "speaker": "agent", "text": "Makes sense. Roughly what's your average monthly electric bill?", "ts": 34 },
+    { "speaker": "caller", "text": "Around $280.", "ts": 39 },
+    { "speaker": "agent", "text": "That's a great fit for solar. Let's book a free consultation. Thursday at 3pm work?", "ts": 43 },
+    { "speaker": "caller", "text": "Thursday at 3 works for me.", "ts": 50 },
+    { "speaker": "agent", "text": "You're booked for Thursday at 3pm. I'll email the confirmation. Thanks, Dan!", "ts": 54 }
+  ]
+}
