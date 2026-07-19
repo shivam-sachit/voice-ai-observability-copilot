@@ -32,7 +32,13 @@ export class GhlPullSource extends TranscriptSource {
         }
       }),
     )
-    // Drop null bodies (missing/failed detail) and any record we couldn't derive an id for.
-    return details.filter(Boolean).map(normalizeGhlCallLog).filter((t) => t.id)
+    // Fall back to the queried agentId when the (unconfirmed) call-log shape doesn't carry one,
+    // so a missing agent field can't cause a NOT NULL insert failure. Then drop null bodies
+    // (missing/failed detail) and any record we couldn't derive an id for.
+    return details
+      .filter(Boolean)
+      .map(normalizeGhlCallLog)
+      .map((t) => ({ ...t, agentId: t.agentId ?? this.agentId }))
+      .filter((t) => t.id)
   }
 }

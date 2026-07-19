@@ -52,10 +52,13 @@ export async function ingestFromSource(source, { analyze } = {}) {
   return { fetched: transcripts.length, ingested, skipped, analyzed, analyzeFailed }
 }
 
-/** Ingest a single already-normalized transcript (used by the webhook route). */
+/**
+ * Ingest a single already-normalized transcript (used by the webhook route).
+ * @returns {Promise<{ ingested:number, analyzed:number, analyzeFailed:number, duplicate:boolean }>}
+ */
 export async function ingestOne(transcript, { analyze } = {}) {
   if (!transcript.id || transcriptExists(transcript.id)) {
-    return { ingested: 0, analyzed: 0, duplicate: true }
+    return { ingested: 0, analyzed: 0, analyzeFailed: 0, duplicate: true }
   }
   ensureAgent(transcript.agentId)
   insertTranscript(transcript)
