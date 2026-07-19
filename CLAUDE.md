@@ -58,7 +58,7 @@ functional vs mocked.
 **Done**
 - [x] Assignment scoped; HighLevel API discovery complete (`docs/GHL_API_NOTES.md`).
 - [x] Architecture blueprint (`ARCHITECTURE.md`).
-- [x] Decision log (`DECISIONS.md`, ADR-001..023).
+- [x] Decision log (`DECISIONS.md`, ADR-001..024).
 - [x] Repo initialized (`main`); pushed to public remote
   `shivam-sachit/voice-ai-observability-copilot`.
 - [x] Monorepo skeleton scaffolded and **verified runnable** (backend boots, `/api/health`
@@ -76,6 +76,9 @@ functional vs mocked.
   declined, 1 reasoned scope decision. Final cycle returned SHIP-READY.
 - [x] Fixtures + seed (Task 6): 2 agents (booking + solar qualifier), 6 transcripts with
   varied outcomes/failure modes; `src/db/seed.js` (`npm run seed`, idempotent). Verified load.
+- [x] Analysis engine (Task 7): `analysis/{anthropic,schemas,suggestKpis,analyzeTranscript,
+  analyzeService}.js` — Claude structured outputs, default `claude-opus-4-8`. Verified with a
+  stubbed Claude API (mapping + FK-safe verdict filtering + full analyze→store path).
 
 **Build roadmap**
 - [x] 2. Scaffold monorepo skeleton — runnable; feature files are stubs stating their contract.
@@ -83,7 +86,8 @@ functional vs mocked.
 - [x] 4. GHL API client with PIT auth — thin transport (verified with mocked fetch).
 - [x] 5. Ingestion adapter — normalize + FixtureSource + GhlPullSource + ingestService (verified).
 - [x] 6. Seed realistic transcript fixtures — 2 agents, 6 calls + `npm run seed` (verified).
-- [ ] **7. Claude analysis engine + KPI suggestion** ← NEXT (needs ANTHROPIC_API_KEY for live runs)
+- [x] 7. Claude analysis engine + KPI suggestion — structured outputs (verified via mock).
+- [ ] **8. Backend REST API endpoints** ← NEXT (wire routes + `analyzeAndStore` into ingest/webhook)
 - [ ] 8. Backend REST API endpoints
 - [ ] 9. Vue dashboard scaffold + Pinia stores + API client
 - [ ] 10. Fleet + Agent-detail + Call-transcript views
@@ -92,9 +96,9 @@ functional vs mocked.
 - [ ] **Educate-me walkthrough** (after Task 12) — teach the user the full system
   end-to-end so they can own and defend every part in the interview.
 
-**Immediate next step:** Task 7 — the Claude analysis engine: `analysis/anthropic.js`
-(structured output), `suggestKpis`, `analyzeTranscript`, wired into ingestService's `analyze`
-hook. Load the `claude-api` skill first; needs ANTHROPIC_API_KEY for live runs.
+**Immediate next step:** Task 8 — implement the Express routes (agents, kpis, calls, fleet,
+ingest, webhooks) over the services, and pass `analyzeAndStore` as the ingest/webhook `analyze`
+callback. Then the Fable `/review` on the backend slice (Task 18).
 
 **Repository:** https://github.com/shivam-sachit/voice-ai-observability-copilot — public,
 personal account (`shivam-sachit`), remote `origin`, default branch `main`.

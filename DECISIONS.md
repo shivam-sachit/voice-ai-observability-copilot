@@ -401,6 +401,40 @@ assistant (validate → fix → commit) instead.
 
 ---
 
+## ADR-024 — Analysis engine: Claude structured outputs, `claude-opus-4-8` default, FK-safe verdict mapping
+
+**Context.** The analysis engine (KPI suggestion + transcript evaluation) is the graded "AI
+brain." It needs reliable machine-readable output and correct storage. (Confirmed against the
+`claude-api` skill.)
+
+**Decision.**
+- Use Claude via `@anthropic-ai/sdk` with **structured outputs** (`output_config.format`,
+  `type: json_schema`) — the API guarantees the first text block is valid JSON, so no
+  prose-parsing. Schemas in `analysis/schemas.js` honor the structured-output constraints
+  (`additionalProperties: false`, all properties in `required`, no min/max/length).
+- **Default model `claude-opus-4-8`** (Anthropic guidance: default to the most capable model,
+  don't downgrade for cost — analysis quality is what's graded). Configurable via
+  `ANTHROPIC_MODEL` (e.g. `claude-sonnet-5`) for cheaper runs. This **supersedes** the earlier
+  `claude-sonnet-5` default from initial scaffolding.
+- `analyzeTranscript` maps Claude's `kpi_name` back to our `kpi_id` and **drops any verdict
+  without a match** — `kpi_verdicts.kpi_id` is NOT NULL + FK, and we never trust the model to
+  return a valid id even though the prompt tells it to reuse exact KPI names.
+- `analyzeAndStore` (`analysis/analyzeService.js`) is the **injectable `analyze` callback**
+  (keeps ingestion decoupled per ADR-022); it no-ops when the agent has no active KPIs.
+- Evidence discipline (ADR-009) is enforced in both the prompt and the schema: every verdict
+  and use-action carries an exact quote + turn index.
+
+**Alternatives rejected.**
+- *Free-text prompt + `JSON.parse` of prose* — fragile; breaks on formatting drift.
+- *Tool-use (`strict`) for structured output* — `output_config.format` is the canonical
+  current approach and simpler for a single JSON result.
+- *Trusting `kpi_name` as a valid id* — would crash on the FK insert.
+
+**Trade-off accepted.** `claude-opus-4-8` costs more per call than Sonnet; acceptable for
+graded quality, and one env var flips it.
+
+---
+
 ## ADR-021 — The GHL client is a thin transport; response mapping lives in ingestion
 
 **Context.** HighLevel's exact response shapes and some query-param/pagination details are not

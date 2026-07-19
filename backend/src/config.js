@@ -28,6 +28,8 @@ export const config = {
 
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY ?? '',
-    model: process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5',
+    // Default to the most capable model (analysis quality is what this tool is graded on).
+    // Set ANTHROPIC_MODEL=claude-sonnet-5 for cheaper/faster runs at some quality cost.
+    model: process.env.ANTHROPIC_MODEL ?? 'claude-opus-4-8',
   },
 }
