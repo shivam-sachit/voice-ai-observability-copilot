@@ -21,9 +21,14 @@ export class FixtureSource extends TranscriptSource {
     } catch {
       return [] // no fixtures directory yet
     }
-    const transcripts = files.map((f) =>
-      normalizeFixture(JSON.parse(readFileSync(join(this.dir, f), 'utf8'))),
-    )
+    const transcripts = []
+    for (const f of files) {
+      try {
+        transcripts.push(normalizeFixture(JSON.parse(readFileSync(join(this.dir, f), 'utf8'))))
+      } catch (err) {
+        console.warn(`skipping malformed fixture ${f}: ${err.message}`)
+      }
+    }
     return sinceIso
       ? transcripts.filter((t) => !t.startedAt || t.startedAt >= sinceIso)
       : transcripts

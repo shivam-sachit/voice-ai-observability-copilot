@@ -72,12 +72,17 @@ export function getAgentById(id, db = getDb()) {
 // so re-analysis is expected. Used by "save confirmed KPIs" (status 'active').
 export function replaceKpisForAgent(agentId, kpis, db = getDb()) {
   const del = db.prepare(`DELETE FROM kpis WHERE agent_id = ?`)
+  // Changing an agent's KPIs invalidates any analyses computed against the old criteria, so
+  // clear them (cascade removes their verdicts). The dashboard then shows "not analyzed" until
+  // a re-run, instead of a stale analysis left with empty verdicts. See ADR-020.
+  const delAnalyses = db.prepare(`DELETE FROM analysis_results WHERE agent_id = ?`)
   const ins = db.prepare(`
     INSERT INTO kpis (id, agent_id, name, description, category, rubric, weight, source, status, created_at)
     VALUES (@id, @agent_id, @name, @description, @category, @rubric, @weight, @source, @status, @created_at)
   `)
   const tx = db.transaction((list) => {
     del.run(agentId)
+    delAnalyses.run(agentId)
     for (const k of list) {
       ins.run({
         id: k.id ?? randomUUID(),

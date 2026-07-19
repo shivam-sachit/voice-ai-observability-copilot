@@ -75,7 +75,11 @@ CREATE TABLE IF NOT EXISTS kpi_verdicts (
 );
 
 -- Indexes for the aggregation queries the fleet/agent views need.
-CREATE INDEX IF NOT EXISTS idx_transcripts_agent ON transcripts(agent_id);
-CREATE INDEX IF NOT EXISTS idx_kpis_agent        ON kpis(agent_id);
+CREATE INDEX IF NOT EXISTS idx_transcripts_agent  ON transcripts(agent_id);
+CREATE INDEX IF NOT EXISTS idx_kpis_agent         ON kpis(agent_id);
 CREATE INDEX IF NOT EXISTS idx_verdicts_agent_kpi ON kpi_verdicts(agent_id, kpi_id);
-CREATE INDEX IF NOT EXISTS idx_analysis_agent    ON analysis_results(agent_id);
+CREATE INDEX IF NOT EXISTS idx_verdicts_analysis  ON kpi_verdicts(analysis_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_agent     ON analysis_results(agent_id);
+-- UNIQUE both indexes analysis_results by transcript_id (the hot read/delete path) AND
+-- enforces the "one current analysis per transcript" invariant structurally (ADR-020).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_analysis_transcript ON analysis_results(transcript_id);

@@ -26,6 +26,7 @@ export async function ingestFromSource(source, { analyze } = {}) {
   let ingested = 0
   let skipped = 0
   let analyzed = 0
+  let analyzeFailed = 0
 
   for (const t of transcripts) {
     if (!t.id || transcriptExists(t.id)) {
@@ -35,13 +36,20 @@ export async function ingestFromSource(source, { analyze } = {}) {
     ensureAgent(t.agentId)
     insertTranscript(t)
     ingested++
+    // The transcript stays stored even if analysis fails (it can be retried later via
+    // POST /calls/:id/analyze), so one analyzer error never drops the rest of the batch.
     if (analyze) {
-      await analyze(t)
-      analyzed++
+      try {
+        await analyze(t)
+        analyzed++
+      } catch (err) {
+        analyzeFailed++
+        console.warn(`analysis failed for ${t.id}: ${err.message}`)
+      }
     }
   }
 
-  return { fetched: transcripts.length, ingested, skipped, analyzed }
+  return { fetched: transcripts.length, ingested, skipped, analyzed, analyzeFailed }
 }
 
 /** Ingest a single already-normalized transcript (used by the webhook route). */
@@ -51,6 +59,14 @@ export async function ingestOne(transcript, { analyze } = {}) {
   }
   ensureAgent(transcript.agentId)
   insertTranscript(transcript)
-  if (analyze) await analyze(transcript)
-  return { ingested: 1, analyzed: analyze ? 1 : 0, duplicate: false }
+  let analyzed = 0
+  if (analyze) {
+    try {
+      await analyze(transcript)
+      analyzed = 1
+    } catch (err) {
+      console.warn(`analysis failed for ${transcript.id}: ${err.message}`)
+    }
+  }
+  return { ingested: 1, analyzed, duplicate: false }
 }

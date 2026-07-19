@@ -369,6 +369,12 @@ TEXT) and the rest of the app + the frontend.
 **Trade-off accepted.** Re-analysis and KPI changes discard prior results rather than
 versioning them.
 
+**Update (audit cycle 1).** The "one current analysis per transcript" invariant is now enforced
+structurally via `UNIQUE(transcript_id)` on `analysis_results` (previously procedural only,
+via `delPrev`). And `replaceKpisForAgent` now also clears the agent's `analysis_results`,
+because analyses computed against the old KPIs are stale — the dashboard shows "not analyzed"
+until a re-run rather than a stale analysis with empty verdicts.
+
 ---
 
 ## ADR-021 — The GHL client is a thin transport; response mapping lives in ingestion

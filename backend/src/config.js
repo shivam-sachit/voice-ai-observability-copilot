@@ -4,9 +4,20 @@
 // that need them fail loudly when actually used.
 import 'dotenv/config'
 
+// Parse a numeric env var, falling back when unset/empty/non-numeric. Note Number('') === 0,
+// so an empty-but-set PORT must be caught explicitly or it would bind a random port.
+const num = (value, fallback) => {
+  if (value == null || value === '') return fallback
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
 export const config = {
-  port: Number(process.env.PORT ?? 3000),
+  port: num(process.env.PORT, 3000),
   dbPath: process.env.DB_PATH ?? 'data/observability.db',
+  // CORS allow-origin for the API. Default '*' for local dev; restrict to the embed origin in
+  // production. Real request auth arrives with the routes (Task 8).
+  corsOrigin: process.env.CORS_ORIGIN ?? '*',
 
   ghl: {
     baseUrl: process.env.GHL_BASE_URL ?? 'https://services.leadconnectorhq.com',

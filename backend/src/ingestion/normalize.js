@@ -9,10 +9,12 @@ const firstDefined = (obj, keys) => {
 }
 
 // Collapse the many possible speaker labels down to our two roles.
+const AGENT_LABELS = new Set(['agent', 'assistant', 'ai', 'bot', 'system'])
+const CALLER_LABELS = new Set(['caller', 'customer', 'user', 'human', 'contact', 'lead'])
+const isKnownSpeaker = (v) => AGENT_LABELS.has(v) || CALLER_LABELS.has(v)
+
 function mapSpeaker(s) {
-  const v = String(s ?? '').toLowerCase()
-  if (['agent', 'assistant', 'ai', 'bot', 'system'].includes(v)) return 'agent'
-  return 'caller' // customer / user / human / lead / unknown all map to caller
+  return AGENT_LABELS.has(String(s ?? '').toLowerCase()) ? 'agent' : 'caller'
 }
 
 // Accepts an array of turn-like objects OR a plain-string transcript; returns Turn[].
@@ -34,7 +36,11 @@ function normalizeTurns(input) {
       .filter(Boolean)
       .map((line) => {
         const m = line.match(/^([A-Za-z ]{1,20}):\s*(.*)$/)
-        return m ? { speaker: mapSpeaker(m[1]), text: m[2] } : { speaker: 'caller', text: line }
+        // Only treat "Label:" as a speaker tag when Label is a recognized role, so lines like
+        // "Well: ..." aren't mis-split and their text isn't lost.
+        return m && isKnownSpeaker(m[1].trim().toLowerCase())
+          ? { speaker: mapSpeaker(m[1]), text: m[2] }
+          : { speaker: 'caller', text: line }
       })
   }
   return []
@@ -60,8 +66,8 @@ export function normalizeFixture(raw) {
 export function normalizeGhlCallLog(raw) {
   return {
     id: firstDefined(raw, ['id', 'callId', 'messageId']),
-    agentId: firstDefined(raw, ['agentId', 'agent_id']) ?? raw.agent?.id,
-    contactId: firstDefined(raw, ['contactId', 'contact_id']) ?? raw.contact?.id ?? null,
+    agentId: firstDefined(raw, ['agentId', 'agent_id']) ?? raw?.agent?.id,
+    contactId: firstDefined(raw, ['contactId', 'contact_id']) ?? raw?.contact?.id ?? null,
     direction: firstDefined(raw, ['direction']) ?? null,
     status: firstDefined(raw, ['status', 'callStatus']) ?? null,
     durationSec: firstDefined(raw, ['duration', 'callDuration', 'durationSec']) ?? null,

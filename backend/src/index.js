@@ -13,7 +13,7 @@ import ingestRouter from './routes/ingest.js'
 import webhooksRouter from './routes/webhooks.js'
 
 const app = express()
-app.use(cors())
+app.use(cors({ origin: config.corsOrigin }))
 app.use(express.json({ limit: '2mb' }))
 
 // Health check — proves the server is up (used by the smoke test and by the dev proxy).
