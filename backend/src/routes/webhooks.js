@@ -12,6 +12,7 @@ const router = Router()
 router.post('/transcript', ah(async (req, res) => {
   const transcript = normalizeWebhook(req.body ?? {})
   if (!transcript.id) return res.status(400).json({ error: 'payload missing a call id' })
+  if (!transcript.agentId) return res.status(400).json({ error: 'payload missing an agent id' })
   const analyze = anthropicConfigured() ? analyzeAndStore : undefined
   res.json(await ingestOne(transcript, { analyze }))
 }))

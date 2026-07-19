@@ -32,7 +32,9 @@ export async function ingestFromSource(source, { analyze } = {}) {
   let analyzeFailed = 0
 
   for (const t of transcripts) {
-    if (!t.id || transcriptExists(t.id)) {
+    // Skip records missing a required field (id/agentId — both are NOT NULL) or already stored,
+    // so one malformed record can't throw and abort the rest of the batch.
+    if (!t.id || !t.agentId || transcriptExists(t.id)) {
       skipped++
       continue
     }
@@ -61,20 +63,22 @@ export async function ingestFromSource(source, { analyze } = {}) {
  * @returns {Promise<{ ingested:number, analyzed:number, analyzeFailed:number, duplicate:boolean }>}
  */
 export async function ingestOne(transcript, { analyze } = {}) {
-  if (!transcript.id || transcriptExists(transcript.id)) {
-    return { ingested: 0, analyzed: 0, analyzeFailed: 0, duplicate: true }
+  if (!transcript.id || !transcript.agentId || transcriptExists(transcript.id)) {
+    return { ingested: 0, analyzed: 0, analyzeSkipped: 0, analyzeFailed: 0, duplicate: true }
   }
   ensureAgent(transcript.agentId)
   insertTranscript(transcript)
   let analyzed = 0
+  let analyzeSkipped = 0
   let analyzeFailed = 0
   if (analyze) {
     try {
       if (await analyze(transcript)) analyzed = 1
+      else analyzeSkipped = 1
     } catch (err) {
       analyzeFailed = 1
       console.warn(`analysis failed for ${transcript.id}: ${err.message}`)
     }
   }
-  return { ingested: 1, analyzed, analyzeFailed, duplicate: false }
+  return { ingested: 1, analyzed, analyzeSkipped, analyzeFailed, duplicate: false }
 }

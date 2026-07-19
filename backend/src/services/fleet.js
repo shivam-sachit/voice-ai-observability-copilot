@@ -10,7 +10,7 @@ import {
 /** Health rollup for a single agent. */
 export function getAgentHealth(agentId) {
   const totalCalls = countTranscriptsForAgent(agentId)
-  const { analyzed, avgScore, openUseActions } = analysisAggForAgent(agentId)
+  const { analyzed, avgScore, useActionCount } = analysisAggForAgent(agentId)
 
   // Fold the (kpiId, verdict) tallies into one row per KPI with a pass-rate.
   const byKpi = new Map()
@@ -26,7 +26,7 @@ export function getAgentHealth(agentId) {
   })
 
   const healthScore = avgScore != null ? Math.round(avgScore) : null
-  return { totalCalls, analyzedCalls: analyzed, avgScore: healthScore, healthScore, openUseActions, kpiPassRates }
+  return { totalCalls, analyzedCalls: analyzed, avgScore: healthScore, healthScore, useActionCount, kpiPassRates }
 }
 
 /** Every agent with its health rollup — the Fleet Overview payload. */

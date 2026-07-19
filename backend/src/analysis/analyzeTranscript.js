@@ -2,7 +2,7 @@
 // exact transcript quote + turn index (so the UI can highlight the segment). Returns the shape
 // db/repositories.insertAnalysis expects.
 import { structured } from './anthropic.js'
-import { ANALYSIS_SCHEMA } from './schemas.js'
+import { analysisSchemaFor } from './schemas.js'
 
 const SYSTEM = `You are a meticulous QA analyst grading a Voice AI phone call against a fixed set of success criteria (KPIs).
 You are given the agent's KPIs (each with a grading rubric) and the full call transcript with turn indices in brackets.
@@ -27,11 +27,26 @@ export async function analyzeTranscript(transcript, kpis) {
     .join('\n')
 
   const user = `KPIs:\n${kpiText}\n\nTranscript (turn index in brackets):\n${turnsText}`
-  const { data, model } = await structured({ schema: ANALYSIS_SCHEMA, system: SYSTEM, user })
+  // Constrain kpi_name to the agent's actual KPI names so the model can't return an unmappable one.
+  const schema = analysisSchemaFor(kpis.map((k) => k.name))
+  const { data, model } = await structured({ schema, system: SYSTEM, user })
 
   // Map Claude's kpi_name back to our kpi_id; drop any verdict that doesn't match a real KPI
-  // (kpi_verdicts.kpi_id is NOT NULL + FK, so an unmatched name must not be stored).
+  // (kpi_verdicts.kpi_id is NOT NULL + FK, so an unmatched name must not be stored). The enum
+  // above makes drops unlikely, but we still guard and warn if one slips through.
   const idByName = new Map(kpis.map((k) => [k.name, k.id]))
+  const mapped = data.kpi_verdicts.map((v) => ({
+    kpiId: idByName.get(v.kpi_name) ?? null,
+    verdict: v.verdict,
+    confidence: v.confidence,
+    evidenceQuote: v.evidence_quote,
+    evidenceTurn: v.evidence_turn,
+    explanation: v.explanation,
+  }))
+  const verdicts = mapped.filter((v) => v.kpiId != null)
+  if (verdicts.length !== mapped.length) {
+    console.warn(`analyzeTranscript: dropped ${mapped.length - verdicts.length} verdict(s) with an unrecognized KPI name (transcript ${transcript.id})`)
+  }
 
   return {
     transcriptId: transcript.id,
@@ -43,15 +58,6 @@ export async function analyzeTranscript(transcript, kpis) {
     recommendations: data.recommendations,
     useActions: data.use_actions,
     model,
-    verdicts: data.kpi_verdicts
-      .map((v) => ({
-        kpiId: idByName.get(v.kpi_name) ?? null,
-        verdict: v.verdict,
-        confidence: v.confidence,
-        evidenceQuote: v.evidence_quote,
-        evidenceTurn: v.evidence_turn,
-        explanation: v.explanation,
-      }))
-      .filter((v) => v.kpiId != null),
+    verdicts,
   }
 }

@@ -34,10 +34,13 @@ app.use('/api/ingest', ingestRouter)
 app.use('/api/webhooks', webhooksRouter)
 
 // Centralized error handler — every async route forwards rejections here via asyncHandler.
+// Intentional 4xx responses use res.status() directly and never reach here, so anything that
+// lands here is unexpected: log it in full (with stack) and return a plain 500. We do NOT relay
+// err.status — an upstream 401/429 from the Anthropic SDK must not masquerade as our status.
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(`${req.method} ${req.originalUrl} failed:`, err.message)
-  res.status(err.status ?? 500).json({ error: err.message })
+  console.error(`${req.method} ${req.originalUrl} failed:`, err)
+  res.status(500).json({ error: err?.message ?? 'internal server error' })
 })
 
 app.listen(config.port, () => {

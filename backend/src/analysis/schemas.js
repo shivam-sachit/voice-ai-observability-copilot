@@ -26,6 +26,17 @@ export const KPI_SUGGESTION_SCHEMA = {
   },
 }
 
+// Returns the analysis schema with kpi_name constrained to the agent's actual KPI names, so
+// the model can only return names we can map back to a kpi_id (structured outputs enforce the
+// enum). Falls back to a free-string kpi_name when the agent has no KPIs.
+export function analysisSchemaFor(kpiNames) {
+  const schema = structuredClone(ANALYSIS_SCHEMA)
+  if (kpiNames.length > 0) {
+    schema.properties.kpi_verdicts.items.properties.kpi_name.enum = kpiNames
+  }
+  return schema
+}
+
 export const ANALYSIS_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -35,7 +46,9 @@ export const ANALYSIS_SCHEMA = {
   ],
   properties: {
     overall_pass: { type: 'boolean' },
-    overall_score: { type: 'integer' }, // 0..100
+    // numeric min/max aren't supported by structured outputs — state the range in `description`,
+    // which IS sent to the model, so the score scale actually reaches it.
+    overall_score: { type: 'integer', description: 'Overall call quality score from 0 to 100.' },
     summary: { type: 'string' },
     kpi_verdicts: {
       type: 'array',
@@ -46,7 +59,7 @@ export const ANALYSIS_SCHEMA = {
         properties: {
           kpi_name: { type: 'string' },
           verdict: { type: 'string', enum: ['pass', 'fail', 'partial'] },
-          confidence: { type: 'number' }, // 0..1
+          confidence: { type: 'number', description: 'Confidence from 0 to 1.' },
           evidence_quote: { type: 'string' },
           evidence_turn: { type: 'integer' },
           explanation: { type: 'string' },

@@ -463,6 +463,14 @@ webhooks).
 **Trade-off accepted.** The calls list does one analysis lookup per call (N+1) — fine at demo
 scale; flagged in-code to switch to a join if call volume grows.
 
+**Update (Fable `/review`, backend slice).** A model-diverse review (Claude Fable 5) surfaced
+10 findings, all applied: `structured()` now guards `stop_reason` (refusal / max_tokens) before
+parsing; `PUT /kpis` validates + whitelists input (drops client-supplied ids, so a caller can't
+collide with another agent's KPI PK); the webhook and the pull loop guard a missing `agentId`
+(400 / skip, instead of a bind TypeError); `analyzeTranscript` constrains `kpi_name` to the
+agent's KPIs via a per-call enum; the error middleware no longer relays an upstream 401/429 as
+our status and logs the full stack server-side; `openUseActions` → `useActionCount`.
+
 ---
 
 ## ADR-021 — The GHL client is a thin transport; response mapping lives in ingestion

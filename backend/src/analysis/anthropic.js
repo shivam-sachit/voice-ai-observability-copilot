@@ -19,8 +19,10 @@ export function isConfigured() {
 }
 
 /**
- * Ask Claude for a response constrained to `schema` (structured outputs). The API guarantees
- * the first text block is valid JSON matching the schema, so we parse it directly.
+ * Ask Claude for a response constrained to `schema` (structured outputs). For a normal
+ * (end_turn) completion the first text block is valid JSON, but the guarantee does NOT hold
+ * when the model refuses or hits max_tokens — those are handled explicitly so a truncated or
+ * refused response is a clear error, not an opaque JSON.parse crash.
  * @returns {Promise<{ data: object, model: string }>}
  */
 export async function structured({ schema, system, user, maxTokens = 8192 }) {
@@ -31,7 +33,16 @@ export async function structured({ schema, system, user, maxTokens = 8192 }) {
     output_config: { format: { type: 'json_schema', schema } },
     messages: [{ role: 'user', content: user }],
   })
+
+  if (res.stop_reason === 'refusal') throw new Error('Claude declined the request (refusal)')
+  if (res.stop_reason === 'max_tokens') {
+    throw new Error(`Claude response was truncated (max_tokens=${maxTokens}) — raise maxTokens`)
+  }
   const text = res.content.find((b) => b.type === 'text')?.text
   if (!text) throw new Error('Claude returned no text block')
-  return { data: JSON.parse(text), model: res.model }
+  try {
+    return { data: JSON.parse(text), model: res.model }
+  } catch (err) {
+    throw new Error(`Claude returned non-JSON (stop_reason=${res.stop_reason}): ${err.message}`)
+  }
 }

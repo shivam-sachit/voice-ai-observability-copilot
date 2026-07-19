@@ -13,8 +13,11 @@ const firstDefined = (obj, keys) => {
   for (const k of keys) if (obj?.[k] != null) return obj[k]
   return undefined
 }
+// Pick the agents array defensively: the response may be a bare array or wrap it under one of
+// several keys (unconfirmed shape). Only accept a candidate that is actually an array.
+const firstArray = (...candidates) => candidates.find(Array.isArray) ?? []
 const extractAgents = (res) =>
-  Array.isArray(res) ? res : (res?.agents ?? res?.data ?? res?.items ?? [])
+  Array.isArray(res) ? res : firstArray(res?.agents, res?.data, res?.items)
 
 function normalizeGhlAgent(a) {
   return {
