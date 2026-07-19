@@ -368,3 +368,25 @@ TEXT) and the rest of the app + the frontend.
 
 **Trade-off accepted.** Re-analysis and KPI changes discard prior results rather than
 versioning them.
+
+---
+
+## ADR-021 — The GHL client is a thin transport; response mapping lives in ingestion
+
+**Context.** HighLevel's exact response shapes and some query-param/pagination details are not
+fully confirmed (their docs render client-side). We still want a clean, testable client now.
+
+**Decision.** `ghl/client.js` only authenticates (PIT) and returns **raw parsed JSON**. It does
+NOT map to our domain shape — that is the ingestion layer's job (`normalize.js`). Unconfirmed
+request params (date filters, pagination) are included but **flagged in comments and logged**
+(the ingestion layer reports how many records it received), never silently truncated.
+`isConfigured()` lets callers fall back to fixtures when no PIT is present.
+
+**Alternatives rejected.**
+- *Map to the domain shape inside the client* — spreads HighLevel-shape assumptions across two
+  concerns and couples the transport to shapes we haven't confirmed yet.
+- *Guess pagination/params silently* — risks silently dropping results; instead we flag + log
+  and finalize against a live sandbox.
+
+**Trade-off accepted.** A second mapping hop (client → normalize) in exchange for a clean
+transport/mapping separation and honest handling of unknowns.

@@ -55,7 +55,7 @@ functional vs mocked.
 **Done**
 - [x] Assignment scoped; HighLevel API discovery complete (`docs/GHL_API_NOTES.md`).
 - [x] Architecture blueprint (`ARCHITECTURE.md`).
-- [x] Decision log (`DECISIONS.md`, ADR-001..020).
+- [x] Decision log (`DECISIONS.md`, ADR-001..021).
 - [x] Repo initialized (`main`); pushed to public remote
   `shivam-sachit/voice-ai-observability-copilot`.
 - [x] Monorepo skeleton scaffolded and **verified runnable** (backend boots, `/api/health`
@@ -63,12 +63,14 @@ functional vs mocked.
   Feature files exist as stubs that state their contract in comments.
 - [x] SQLite storage layer (Task 3): `db/connection.js`, `db/init.js` (`npm run db:init`),
   `db/repositories.js`. Verified with a smoke test across agents/kpis/transcripts/analysis.
+- [x] GHL API client (Task 4): `ghl/client.js` — PIT-authed transport for listAgents /
+  getAgent / listCallLogs / getCallLog. Verified with a mocked fetch (URL, headers, errors).
 
 **Build roadmap**
 - [x] 2. Scaffold monorepo skeleton — runnable; feature files are stubs stating their contract.
 - [x] 3. SQLite data model + storage layer — connection, init, repositories (verified).
-- [ ] **4. GHL API client with PIT auth** ← NEXT (`ghl/client.js`)
-- [ ] 5. Ingestion adapter (fixtures + pull + webhook)
+- [x] 4. GHL API client with PIT auth — thin transport (verified with mocked fetch).
+- [ ] **5. Ingestion adapter (fixtures + pull + webhook)** ← NEXT
 - [ ] 6. Seed realistic transcript fixtures
 - [ ] 7. Claude analysis engine + KPI suggestion
 - [ ] 8. Backend REST API endpoints
@@ -76,9 +78,11 @@ functional vs mocked.
 - [ ] 10. Fleet + Agent-detail + Call-transcript views
 - [ ] 11. KPI config UI (AI-suggested + confirm)
 - [ ] 12. GHL iframe embed + install/run docs + README + demo script
+- [ ] **Educate-me walkthrough** (after Task 12) — teach the user the full system
+  end-to-end so they can own and defend every part in the interview.
 
-**Immediate next step:** Task 4 — the HighLevel API client (`ghl/client.js`): PIT-authed
-wrappers for listAgents / getAgent / listCallLogs / getCallLog.
+**Immediate next step:** Task 5 — the ingestion adapter: implement `normalize.js`,
+`FixtureSource`, `GhlPullSource`, and `ingestService` (fetch → dedupe → store → analyze).
 
 **Repository:** https://github.com/shivam-sachit/voice-ai-observability-copilot — public,
 personal account (`shivam-sachit`), remote `origin`, default branch `main`.
