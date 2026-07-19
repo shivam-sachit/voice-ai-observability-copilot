@@ -274,3 +274,48 @@ generating implementation code, and keep both updated as work proceeds. Build in
 chunks, explaining each module as it lands — never dump the whole scaffold at once.
 
 **Consequence.** Slightly slower start; far better comprehension and defensibility.
+
+---
+
+## ADR-017 — Commit the docs and build an incremental, attributable git history on `main`
+
+**Context.** The deliverable is a GitHub repo the org reviews. The commit history is itself a
+signal, and this org is explicitly slop-averse. Discovery + design artifacts are already
+written.
+
+**Decision.** Initialize git immediately and commit in **small, meaningful, incremental
+steps** on a **linear `main`** history (docs first, then one commit per build phase — never a
+single large dump). Author commits as **Sachit Shivam <sachit.shivam@gmail.com>** via
+**repo-local** git config so GitHub attributes the work to the correct account without
+touching global config. No AI attribution in commit messages. No amend/rebase/force-push.
+
+**Alternatives rejected.**
+- *One big "initial commit" at the end* — reads as generated/dumped; the weakest ownership
+  signal.
+- *Feature branch + PR per phase* — adds merge-commit noise and an early-push requirement for
+  a solo submission; linear `main` is more legible to a reviewer cloning the repo.
+- *Use the machine's global git identity* (`shivam-aluskort` / `sachit@aluskort.com`) — a
+  name/email mismatch and not the submitting GitHub account, which would misattribute the
+  work.
+
+**Trade-off accepted.** Linear `main` forgoes a PR-review trail; acceptable for a solo
+assignment where clone-and-read legibility wins.
+
+---
+
+## ADR-018 — Commit `CLAUDE.md` as a neutral project guide
+
+**Context.** `CLAUDE.md` started as an AI-assistant session-handoff file. The repo is an
+outward-facing hiring submission evaluating the author's ownership.
+
+**Decision.** Reframe `CLAUDE.md` as a **neutral, human-first "Project Guide"** (orientation +
+engineering conventions + live status) and commit it. It still auto-loads as Claude Code
+project context, but reads as ordinary contributor documentation.
+
+**Alternatives rejected.**
+- *Commit as-is (AI-assistant framing)* — foregrounds AI-driven handoffs on an assignment
+  that is testing the author's own ownership.
+- *Gitignore it* — loses a genuinely useful in-repo orientation + status doc for reviewers.
+
+**Trade-off accepted.** Slightly less explicit about the tooling used; the content stands on
+its own as legitimate project documentation.
