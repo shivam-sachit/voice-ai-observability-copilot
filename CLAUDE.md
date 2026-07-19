@@ -123,5 +123,6 @@ personal account (`shivam-sachit`), remote `origin`, default branch `main`.
 | `DECISIONS.md` | Why — the ADR decision log |
 | `docs/GHL_API_NOTES.md` | HighLevel API research |
 | `README.md` | (later) install/run + Team-of-One + functional-vs-mocked |
+| `docs/handoff/` | Session handoffs — read the newest first when resuming |
 
 <sub>This file also serves as the repository's Claude Code project context (auto-loaded by the Claude Code CLI).</sub>
