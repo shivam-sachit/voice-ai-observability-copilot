@@ -319,3 +319,23 @@ project context, but reads as ordinary contributor documentation.
 
 **Trade-off accepted.** Slightly less explicit about the tooling used; the content stands on
 its own as legitimate project documentation.
+
+---
+
+## ADR-019 — Adopt current major dependency versions, pinned via committed lockfiles
+
+**Context.** At install time, npm resolved the current stable majors: Express 5, Vue 3.5 +
+Vue Router 5, Vite 8, Pinia 4, `better-sqlite3` 12, `@anthropic-ai/sdk` 0.x. `better-sqlite3`
+installed via a prebuilt binary (no native compile) on Node 24 / Windows.
+
+**Decision.** Accept the current stable majors and pin them with committed `package-lock.json`
+files in both packages for reproducible installs. The APIs used (Express routers + `:param`
+routes, Vue Router `createRouter`/`createWebHistory`, Pinia options stores) are stable across
+these majors.
+
+**Alternatives rejected.**
+- *Pin to older majors (e.g. Express 4)* — no benefit here; the code uses only stable,
+  version-agnostic APIs, and the current majors are the maintained line.
+
+**Trade-off accepted.** Slightly newer surface area; mitigated by the committed lockfiles and
+by keeping the dependency list minimal (5 backend deps, 3 frontend deps).
