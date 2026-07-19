@@ -45,6 +45,9 @@ functional vs mocked.
 - **Keep the "Current status" section below current** so the next work session can resume
   immediately.
 - **Don't re-run discovery.** Platform research already done lives in `docs/GHL_API_NOTES.md`.
+- **Review cadence (ADR-023).** On-demand Opus audit-loop, plus a model-diverse **Fable
+  `/review`** (adapted to the slice's commit range, since we're on linear `main`) at slice
+  boundaries — after Task 8, after Task 11, and a light pass before submission.
 
 ---
 
@@ -55,7 +58,7 @@ functional vs mocked.
 **Done**
 - [x] Assignment scoped; HighLevel API discovery complete (`docs/GHL_API_NOTES.md`).
 - [x] Architecture blueprint (`ARCHITECTURE.md`).
-- [x] Decision log (`DECISIONS.md`, ADR-001..022).
+- [x] Decision log (`DECISIONS.md`, ADR-001..023).
 - [x] Repo initialized (`main`); pushed to public remote
   `shivam-sachit/voice-ai-observability-copilot`.
 - [x] Monorepo skeleton scaffolded and **verified runnable** (backend boots, `/api/health`

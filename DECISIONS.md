@@ -377,6 +377,30 @@ until a re-run rather than a stale analysis with empty verdicts.
 
 ---
 
+## ADR-023 — Diverse-model review cadence: Fable `/review` at slice boundaries, adapted to linear `main`
+
+**Context.** We run an Opus audit-loop on demand. We also want a second, model-diverse review
+(Fable) using the `/review` rubric. `/review` is built for GitHub PRs, but we commit directly
+to linear `main` (ADR-017), so there is no PR to attach to.
+
+**Decision.** Run a **Fable** subagent with `/review`'s rubric as the guiding prompt at
+**vertical-slice boundaries** — after Task 8 (backend fully wired), after Task 11 (frontend),
+and a light pass before submission — pointed at the slice's **commit range**
+(`git diff <base>..HEAD`) rather than a PR. Findings are validated → fixed → committed, the
+same discipline as the audit-loop. It is **complementary** to the Opus audit-loop (different
+model, different surface), not stacked on identical lines.
+
+**Alternatives rejected.**
+- *Review every task* — too much review-to-build overhead.
+- *One review at the very end* — issues surface late, when they're more expensive to fix.
+- *Switch to PR-per-slice so `/review` runs natively* — reverses ADR-017's linear-`main`
+  choice and adds ceremony; we keep linear history and adapt the review to commit ranges.
+
+**Trade-off accepted.** No native inline-PR-comment trail; review findings flow through the
+assistant (validate → fix → commit) instead.
+
+---
+
 ## ADR-021 — The GHL client is a thin transport; response mapping lives in ingestion
 
 **Context.** HighLevel's exact response shapes and some query-param/pagination details are not
