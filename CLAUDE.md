@@ -56,7 +56,8 @@ functional vs mocked.
 - [x] Assignment scoped; HighLevel API discovery complete (`docs/GHL_API_NOTES.md`).
 - [x] Architecture blueprint (`ARCHITECTURE.md`).
 - [x] Decision log (`DECISIONS.md`, ADR-001..016).
-- [x] Repo initialized; docs committed as the first commit.
+- [x] Repo initialized (`main`); pushed to public remote
+  `shivam-sachit/voice-ai-observability-copilot`.
 
 **Build roadmap**
 - [ ] **2. Scaffold monorepo skeleton** ← NEXT: folders, `package.json` ×2, `.gitignore`,
@@ -73,6 +74,9 @@ functional vs mocked.
 - [ ] 12. GHL iframe embed + install/run docs + README + demo script
 
 **Immediate next step:** Task 2 — scaffold the monorepo skeleton (no business logic yet).
+
+**Repository:** https://github.com/shivam-sachit/voice-ai-observability-copilot — public,
+personal account (`shivam-sachit`), remote `origin`, default branch `main`.
 
 **Environment:** Windows, Node 24 / npm 11. Secrets live in `backend/.env` (see
 `.env.example`): `GHL_PIT`, `GHL_LOCATION_ID`, `ANTHROPIC_API_KEY`.
