@@ -1,0 +1,22 @@
+{
+  "id": "call_booking_001",
+  "agentId": "agent_booking_bot",
+  "contactId": "contact_alice",
+  "direction": "inbound",
+  "status": "completed",
+  "durationSec": 148,
+  "startedAt": "2026-07-12T15:04:00Z",
+  "turns": [
+    { "speaker": "agent", "text": "Thanks for calling Bright Smile Dental, this is Ava. How can I help you today?", "ts": 0 },
+    { "speaker": "caller", "text": "Hi, I'd like to book a cleaning.", "ts": 6 },
+    { "speaker": "agent", "text": "I can help with that. May I get your full name?", "ts": 11 },
+    { "speaker": "caller", "text": "Alice Nguyen.", "ts": 15 },
+    { "speaker": "agent", "text": "Thanks, Alice. We have Thursday at 2pm or Friday at 10am. Which works better for you?", "ts": 20 },
+    { "speaker": "caller", "text": "Thursday at 2 is perfect.", "ts": 27 },
+    { "speaker": "agent", "text": "Great — I've booked you for Thursday at 2pm. Can I grab an email to send the confirmation?", "ts": 31 },
+    { "speaker": "caller", "text": "Sure, it's alice.nguyen@example.com.", "ts": 38 },
+    { "speaker": "agent", "text": "Perfect, that's alice.nguyen@example.com. Confirmation is on its way. Anything else I can help with?", "ts": 44 },
+    { "speaker": "caller", "text": "No, that's everything. Thank you!", "ts": 49 },
+    { "speaker": "agent", "text": "You're welcome, Alice. Have a great day!", "ts": 51 }
+  ]
+}

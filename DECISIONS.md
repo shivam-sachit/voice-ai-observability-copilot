@@ -390,3 +390,33 @@ request params (date filters, pagination) are included but **flagged in comments
 
 **Trade-off accepted.** A second mapping hop (client → normalize) in exchange for a clean
 transport/mapping separation and honest handling of unknowns.
+
+---
+
+## ADR-022 — Ingestion orchestration: dedupe, FK safety-net, injected analyzer, defensive normalize
+
+**Context.** `ingestService` turns any `TranscriptSource` into stored (and later analyzed)
+transcripts. It must be idempotent, must not fail when agents aren't synced yet, and must not
+hard-couple to the analysis engine.
+
+**Decision.**
+- **Dedupe** by `transcriptExists(id)` before storing (plus `INSERT OR IGNORE` as a second
+  guard) → re-ingesting the same call is a safe no-op.
+- **`ensureAgent()` safety-net** — create a minimal placeholder agent if the transcript's agent
+  isn't stored yet, so the FK holds even before an agent sync; a later sync upserts real
+  details in place.
+- **The analyzer is injected** as an optional `analyze` callback (wired in Task 7), so
+  ingestion has zero import dependency on the analysis engine — the two are independently
+  testable (Task 5 tested ingestion with no AI/network).
+- **`normalize.js` is defensive** — tries multiple field names, handles array *or* string
+  transcripts, maps varied speaker labels, and always keeps the original payload in `raw`,
+  because HighLevel shapes are unconfirmed.
+
+**Alternatives rejected.**
+- *Ingestion imports and calls the analyzer directly* — couples the modules; ingestion could
+  not be tested without the AI/network.
+- *Require agents synced before any ingest* — brittle ordering; the safety-net makes ingestion
+  order-independent.
+
+**Trade-off accepted.** A placeholder agent may briefly show its id as its name until a real
+sync fills in the details.

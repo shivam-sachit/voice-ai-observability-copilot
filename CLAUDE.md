@@ -55,7 +55,7 @@ functional vs mocked.
 **Done**
 - [x] Assignment scoped; HighLevel API discovery complete (`docs/GHL_API_NOTES.md`).
 - [x] Architecture blueprint (`ARCHITECTURE.md`).
-- [x] Decision log (`DECISIONS.md`, ADR-001..021).
+- [x] Decision log (`DECISIONS.md`, ADR-001..022).
 - [x] Repo initialized (`main`); pushed to public remote
   `shivam-sachit/voice-ai-observability-copilot`.
 - [x] Monorepo skeleton scaffolded and **verified runnable** (backend boots, `/api/health`
@@ -65,13 +65,16 @@ functional vs mocked.
   `db/repositories.js`. Verified with a smoke test across agents/kpis/transcripts/analysis.
 - [x] GHL API client (Task 4): `ghl/client.js` — PIT-authed transport for listAgents /
   getAgent / listCallLogs / getCallLog. Verified with a mocked fetch (URL, headers, errors).
+- [x] Ingestion adapter (Task 5): `normalize.js`, `FixtureSource`, `GhlPullSource`,
+  `ingestService` (fetch → dedupe → ensure-agent → store; analyzer injected in Task 7). Two
+  fixture calls seeded. Verified: fixtures load + dedupe; normalizers handle array + string.
 
 **Build roadmap**
 - [x] 2. Scaffold monorepo skeleton — runnable; feature files are stubs stating their contract.
 - [x] 3. SQLite data model + storage layer — connection, init, repositories (verified).
 - [x] 4. GHL API client with PIT auth — thin transport (verified with mocked fetch).
-- [ ] **5. Ingestion adapter (fixtures + pull + webhook)** ← NEXT
-- [ ] 6. Seed realistic transcript fixtures
+- [x] 5. Ingestion adapter — normalize + FixtureSource + GhlPullSource + ingestService (verified).
+- [ ] **6. Seed realistic transcript fixtures** ← NEXT (expand set + a `seed` script)
 - [ ] 7. Claude analysis engine + KPI suggestion
 - [ ] 8. Backend REST API endpoints
 - [ ] 9. Vue dashboard scaffold + Pinia stores + API client
@@ -81,8 +84,9 @@ functional vs mocked.
 - [ ] **Educate-me walkthrough** (after Task 12) — teach the user the full system
   end-to-end so they can own and defend every part in the interview.
 
-**Immediate next step:** Task 5 — the ingestion adapter: implement `normalize.js`,
-`FixtureSource`, `GhlPullSource`, and `ingestService` (fetch → dedupe → store → analyze).
+**Immediate next step:** Task 6 — expand the transcript fixtures into a realistic set across a
+couple of agents, and add a `seed` script (`npm run seed`) that loads fixture agents +
+transcripts into the DB.
 
 **Repository:** https://github.com/shivam-sachit/voice-ai-observability-copilot — public,
 personal account (`shivam-sachit`), remote `origin`, default branch `main`.

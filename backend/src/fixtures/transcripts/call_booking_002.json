@@ -1,0 +1,21 @@
+{
+  "id": "call_booking_002",
+  "agentId": "agent_booking_bot",
+  "contactId": "contact_bob",
+  "direction": "inbound",
+  "status": "completed",
+  "durationSec": 95,
+  "startedAt": "2026-07-13T18:22:00Z",
+  "turns": [
+    { "speaker": "agent", "text": "Bright Smile Dental, this is Ava.", "ts": 0 },
+    { "speaker": "caller", "text": "Yeah, I need to reschedule my appointment.", "ts": 4 },
+    { "speaker": "agent", "text": "Okay. What day would you like?", "ts": 8 },
+    { "speaker": "caller", "text": "Whenever you have something next week.", "ts": 12 },
+    { "speaker": "agent", "text": "We have some availability. I'll put you down.", "ts": 16 },
+    { "speaker": "caller", "text": "Wait, for when exactly?", "ts": 20 },
+    { "speaker": "agent", "text": "Next week. You'll get a text.", "ts": 23 },
+    { "speaker": "caller", "text": "Okay, but which day and time?", "ts": 27 },
+    { "speaker": "agent", "text": "It should be fine. Is there anything else?", "ts": 31 },
+    { "speaker": "caller", "text": "I guess not...", "ts": 35 }
+  ]
+}
