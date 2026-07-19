@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+frontend/dist/
+
+# SQLite database files (schema.sql is tracked; data files are not)
+*.sqlite
+*.sqlite3
+*.db
+backend/data/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

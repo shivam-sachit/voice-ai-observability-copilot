@@ -1,0 +1,276 @@
+# Decision Log (ADRs)
+
+> Every non-trivial decision, the options considered, and **why** we chose what we chose.
+> New decisions get appended here as they're made. Format: Context → Decision →
+> Alternatives rejected → Trade-off accepted. Companion to `ARCHITECTURE.md` (which
+> describes *how* the system works; this file records *why* it's shaped that way).
+>
+> All accepted 2026-07-19 unless noted.
+
+---
+
+## ADR-001 — Build the real ingestion pipeline; seed transcript *data* with fixtures
+
+**Context.** A fresh HighLevel sandbox has no calls, so there are no real transcripts to
+ingest yet. Investigation confirmed HighLevel *does* expose transcripts via public API
+(call-log API, message-transcription API, and a "Transcript Generated" workflow trigger).
+
+**Decision.** Wire the ingestion layer against the **real** GHL API shape (and a real
+webhook endpoint), but seed it with **realistic fixture transcripts** so the dashboard and
+analysis always have meaningful data to work on.
+
+**Alternatives rejected.**
+- *Wait for / manufacture real calls only* — brittle, may need a provisioned number and
+  minutes; can't guarantee a rich demo.
+- *Fully fake everything* — throws away the credible "this is wired to the real API" story
+  the evaluators are asking about.
+
+**Trade-off accepted.** Live transcript *data* is mocked in the demo; the *pipeline* is
+real. This is disclosed explicitly (see `ARCHITECTURE.md` §12). The assignment itself asks
+for this distinction ("what is functional vs mocked").
+
+---
+
+## ADR-002 — Integrate via an iframe embed, not the Custom JS injection panel
+
+**Context.** The assignment allows either "custom JS" or a "GHL marketplace app." The first
+screen the candidate saw was the Custom JS module.
+
+**Decision.** Host the Vue app externally and embed it inside the sub-account via a **Custom
+Menu Link / Custom Page iframe**, passing the location (sub-account) context to the app.
+
+**Alternatives rejected.**
+- *Custom JS injection* — agency-level only; goes through a **manual review with up to a
+  ~10-day SLA** (won't clear in the assignment window); runs inside GHL's own DOM, so it's
+  fragile against their UI changes; documented restrictions (no DB/sensitive-data access).
+
+**Trade-off accepted.** The dashboard lives in an iframe rather than being natively woven
+into the DOM. In exchange we get zero review delay, full ownership of the code, and a stable
+integration that's easy to demo.
+
+---
+
+## ADR-003 — Authenticate to GHL with a Private Integration Token (PIT), not OAuth 2.0
+
+**Context.** The backend must call HighLevel's API. GHL supports full OAuth 2.0 (marketplace
+app) or a per-sub-account Private Integration Token.
+
+**Decision.** Use a **PIT** (single token in `.env`) for the build.
+
+**Alternatives rejected.**
+- *OAuth 2.0 authorization-code flow* — adds a redirect callback, token storage, and refresh
+  logic: ~5× the moving parts for no functional gain in a single-tenant sandbox demo.
+
+**Trade-off accepted.** PIT is single-sub-account and less "production-real." Mitigation: the
+GHL client is isolated in one file, so swapping to OAuth changes only how the `Authorization`
+token is obtained. OAuth is documented in the README as the production path.
+
+---
+
+## ADR-004 — Define KPIs with a hybrid "AI suggests, human confirms" flow
+
+**Context.** The assignment says to "set observability parameters based on the agent's
+specific goals or script." Success criteria must come from somewhere.
+
+**Decision.** The Copilot reads the agent's script/goals via API and **AI-suggests** a set of
+KPIs (each with a testable rubric); the user **edits/confirms** them before they go active.
+
+**Alternatives rejected.**
+- *Manual only* (user types every KPI) — clear but less impressive, and ignores the agent's
+  actual script.
+- *Auto-derived only* (no human step) — fuzzy and hard to trust; nothing for the user to own.
+
+**Trade-off accepted.** Slightly more UI (a confirm screen) in exchange for the strongest
+product story: automation a human still owns. Maps directly to the brief's wording.
+
+---
+
+## ADR-005 — Backend stack: Express + SQLite
+
+**Context.** Node backend required. Needs an HTTP layer and persistence for agents,
+transcripts, KPIs, and analysis results.
+
+**Decision.** **Express** for HTTP, **SQLite** for storage.
+
+**Alternatives rejected.**
+- *Fastify + SQLite* — nice built-in validation but marginally less universally known.
+- *NestJS + Postgres* — dependency injection + decorators **hide control flow**, which works
+  against the candidate when asked to "walk through a request"; Postgres needs a running
+  service (infra overhead) unjustified at this scale.
+- *Express + JSON files* — simplest, but loses SQL, which the fleet-view aggregations need.
+
+**Trade-off accepted.** SQLite is single-file/single-node (not horizontally scalable) — fine
+for this tool; the production note is "swap to Postgres, same schema."
+
+---
+
+## ADR-006 — Use `better-sqlite3` (synchronous driver)
+
+**Context.** Need a SQLite driver for Node.
+
+**Decision.** `better-sqlite3`.
+
+**Alternatives rejected.**
+- *`sqlite3` (async)* — introduces callback/promise ceremony and connection pooling concerns
+  for no benefit here.
+- *An ORM (Prisma/Sequelize)* — adds a generated-client abstraction layer; raw parameterized
+  queries are more transparent for an interview ("show me the SQL").
+
+**Trade-off accepted.** Synchronous DB calls block the event loop — acceptable because this
+is a low-QPS internal tool and the queries are tiny/fast.
+
+---
+
+## ADR-007 — Normalize what we aggregate; JSON-blob what we only display
+
+**Context.** Analysis produces per-KPI verdicts (which we aggregate for the fleet view) plus
+recommendations / use-actions / findings (which we only render).
+
+**Decision.** `kpi_verdicts` is a **normalized table** (so we can `GROUP BY` agent/KPI);
+`recommendations`, `use_actions`, and `findings` are stored as **JSON columns** on
+`analysis_results`.
+
+**Alternatives rejected.**
+- *Everything as JSON blobs* — can't do SQL aggregation for pass-rates → fleet view gets
+  slow/awkward.
+- *Everything fully normalized* — over-engineered tables for data we only ever render as-is.
+
+**Trade-off accepted.** A deliberate, explainable boundary rather than one uniform rule.
+
+---
+
+## ADR-008 — Analysis via Claude structured output (tool-use), as two calls
+
+**Context.** The "AI brain" must (a) propose KPIs and (b) evaluate a transcript, both
+producing machine-usable results.
+
+**Decision.** Two **Claude** calls that each **force a fixed JSON schema** via tool-use:
+`suggestKpis(agent)` and `analyzeTranscript(transcript, kpis)`.
+
+**Alternatives rejected.**
+- *Free-text prompts + regex/JSON.parse of prose* — fragile; breaks on formatting drift.
+- *One mega-call doing both* — muddles two concerns and makes each harder to test/explain.
+
+**Trade-off accepted.** Two round-trips instead of one; in exchange each call has a single
+responsibility and a schema that serves as the contract between AI and app.
+
+---
+
+## ADR-009 — Every verdict and use-action carries a turn index + exact quote
+
+**Context.** The brief wants "Use Actions" — specific call segments flagged for a human.
+Findings must be trustworthy, not vibes.
+
+**Decision.** The analysis schema requires each KPI verdict and each use-action to cite the
+**exact transcript quote** and its **turn index**; the prompt forbids citing text not present
+in the transcript.
+
+**Alternatives rejected.**
+- *Summary-only findings* — unfalsifiable; the user can't verify or jump to the moment.
+
+**Trade-off accepted.** Slightly stricter prompt/schema; in exchange the Call view can
+highlight the precise segment and every finding is clickable back to evidence.
+
+---
+
+## ADR-010 — One `TranscriptSource` interface, three implementations
+
+**Context.** Transcripts can come from fixtures, an API pull, or a webhook push, but the rest
+of the system shouldn't care which.
+
+**Decision.** A single `TranscriptSource` contract with `FixtureSource`, `GhlPullSource`, and
+a webhook endpoint; all normalize to one internal `Transcript` shape.
+
+**Alternatives rejected.**
+- *Separate ad-hoc code paths per source* — duplicated normalization, no clean swap point.
+
+**Trade-off accepted.** A small amount of abstraction, which pays for itself: this seam **is**
+the real-vs-mocked story, and going live is a one-line source swap.
+
+---
+
+## ADR-011 — Frontend: Vue 3 + Vite + Pinia
+
+**Context.** Vue.js is required by the brief. Some shared state (agents, analysis results)
+appears on multiple screens.
+
+**Decision.** **Vue 3** (Composition API) + **Vite** (dev/build) + **Pinia** (state).
+
+**Alternatives rejected.**
+- *No state library (fetch inside each view)* — duplicated fetches and out-of-sync copies of
+  shared data across the Fleet/Agent/Call screens.
+- *Vuex* — the older, heavier predecessor to Pinia; more boilerplate, weaker TS support.
+
+**Trade-off accepted.** One small dependency (Pinia) for shared, single-source-of-truth
+state. Pinia is tiny and explicit — a store is just `state`/`getters`/`actions`.
+
+---
+
+## ADR-012 — Single monorepo (`/backend`, `/frontend`)
+
+**Context.** Deliverable is one GitHub repo.
+
+**Decision.** One repo, two folders, each with its own `package.json`; one root README.
+
+**Alternatives rejected.**
+- *Two separate repos* — more overhead to clone/run/review for a solo project.
+- *npm workspaces / turborepo* — unnecessary tooling for two packages.
+
+**Trade-off accepted.** No shared-package tooling; the two folders are independent, which is
+simpler to explain and run.
+
+---
+
+## ADR-013 — LLM provider: Claude (latest model)
+
+**Context.** The brief just says "AI." We need reliable structured output.
+
+**Decision.** Use **Claude** (latest model) via the Anthropic SDK, with tool-use for
+structured output. The model id is recorded on each `analysis_results` row for provenance.
+
+**Alternatives rejected.**
+- *Other providers* — no functional reason to prefer them here; Claude's tool-use gives clean
+  schema-constrained output. (Swappable: the LLM is isolated in `analysis/anthropic.js`.)
+
+**Trade-off accepted.** Vendor dependency, isolated behind one file.
+
+---
+
+## ADR-014 — Optional agent prompt write-back, gated behind a confirm
+
+**Context.** Truly "closing the flywheel" means applying a recommended fix back to the agent.
+
+**Decision.** Offer an **optional** "Apply fix" action that writes an improved prompt to the
+agent via `voice-ai-agents.write`, **gated behind an explicit user confirmation**. Treated as
+a stretch, clearly labeled.
+
+**Alternatives rejected.**
+- *Auto-apply fixes* — mutates the customer's live agent without oversight; unacceptable.
+- *Omit entirely* — leaves the flywheel open; worth showing as a gated capability.
+
+**Trade-off accepted.** It's a stretch item that may ship mocked; the write is never silent.
+
+---
+
+## ADR-015 — Guiding principle: simplest thing that closes the loop and is line-by-line explainable
+
+**Context.** Evaluation includes a **manual code review** ("only non-slop code") and an
+interview where the candidate must defend every decision and own the code.
+
+**Decision.** Optimize every choice for **transparency and explainability** over cleverness or
+"enterprise-ness." Boring, owned, and correct beats impressive-but-magic.
+
+**Consequence.** This principle is *why* several ADRs above went the way they did (Express
+over NestJS, PIT over OAuth, raw SQL over ORM, iframe over Custom JS).
+
+---
+
+## ADR-016 — Blueprint before code; maintain this decision log
+
+**Context.** The candidate must be able to follow and own everything that gets built.
+
+**Decision.** Write `ARCHITECTURE.md` (the blueprint) and this `DECISIONS.md` **before**
+generating implementation code, and keep both updated as work proceeds. Build in reviewable
+chunks, explaining each module as it lands — never dump the whole scaffold at once.
+
+**Consequence.** Slightly slower start; far better comprehension and defensibility.
