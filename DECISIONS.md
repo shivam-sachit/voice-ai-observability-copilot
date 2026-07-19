@@ -339,3 +339,32 @@ these majors.
 
 **Trade-off accepted.** Slightly newer surface area; mitigated by the committed lockfiles and
 by keeping the dependency list minimal (5 backend deps, 3 frontend deps).
+
+---
+
+## ADR-020 — Storage-layer semantics (domain boundary, idempotency, replace-on-reanalyze)
+
+**Context.** The repository layer sits between SQLite (snake_case columns, JSON stored as
+TEXT) and the rest of the app + the frontend.
+
+**Decision.**
+- The repository is the **only** place SQL lives. It maps snake_case rows to **camelCase
+  domain objects** and handles JSON (de)serialization, so callers and the frontend work in
+  one consistent shape.
+- **Transcript inserts are idempotent** (`INSERT OR IGNORE` on the GHL call id) — re-ingesting
+  the same call is a safe no-op, which the webhook + pull paths rely on.
+- **One current analysis per transcript**: re-analyzing replaces the prior `analysis_results`
+  row (and its `kpi_verdicts` via cascade).
+- **Confirming KPIs replaces the agent's whole KPI set** (`replaceKpisForAgent`); since
+  `kpi_verdicts` cascade on KPI delete, changing criteria invalidates stale verdicts and
+  re-analysis is expected.
+- Every repo function takes an **optional `db` connection**, so scripts/tests use isolated
+  databases (as the Task 3 smoke test does).
+
+**Alternatives rejected.**
+- *Leak snake_case rows to the API* — inconsistent JS/JSON shape, uglier frontend code.
+- *Keep full history of every analysis / KPI revision* — unnecessary for this tool and adds
+  query complexity; an append-only history can be added later if a use case appears.
+
+**Trade-off accepted.** Re-analysis and KPI changes discard prior results rather than
+versioning them.
